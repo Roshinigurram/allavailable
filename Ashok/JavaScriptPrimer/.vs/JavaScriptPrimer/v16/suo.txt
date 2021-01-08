@@ -1,0 +1,152 @@
+using System;
+using System.Collections.Generic;
+using System.Data.SqlClient;
+using System.Text;
+
+
+namespace ConsoleApp12
+{
+    public class ReadEmployee
+    {
+        private string connectionString;
+        private SqlConnection obj;
+        public ReadEmployee()
+        {
+            connectionString = "Data Source=192.168.50.95;Initial Catalog=svedecherla;Integrated Security=True;Persist Security Info=False;Pooling=False;MultipleActiveResultSets=False;Encrypt=False;TrustServerCertificate=False";
+            obj = new SqlConnection(connectionString);
+        }
+        public void ReadAll()
+        {
+            obj.Open();
+            SqlCommand cmd = new SqlCommand("select empId,name,location from InsertEmployee", obj);
+            SqlDataReader rd = cmd.ExecuteReader();
+            while (rd.Read())
+            {
+                Console.WriteLine(rd["empId"] + "\t" + rd["name"] + "\t" + rd["location"]);
+
+            }
+            obj.Close();
+        }
+        public void FilterDeptsByName(string name)
+        {
+            obj.Open();
+            SqlCommand objcmd = new SqlCommand("select empId, name, location from  InsertEmployee where name=@name", obj);
+            objcmd.Parameters.AddWithValue("@name", name);
+            SqlDataReader objDR = objcmd.ExecuteReader();
+            while (objDR.Read())
+            {
+                Console.WriteLine(objDR["empId"] + "\t" + objDR["name"] + "\t" + objDR["location"]);
+            }
+            obj.Close();
+        }
+        public string GetDeptNameById(int empId)
+        {
+            obj.Open();
+            SqlCommand objCmd = new SqlCommand("SELECT name from InsertEmployee where empId = @empId", obj);
+            objCmd.Parameters.AddWithValue("@empId", empId);
+            var name = objCmd.ExecuteScalar();
+            obj.Close();
+            return Convert.ToString(name);
+        }
+        public void Readbyid(int empId)
+        {
+            SqlCommand objCmd = new SqlCommand("SELECT empId, name, Location FROM InsertEmployee WHERE empId=@empId", obj);
+            objCmd.Parameters.AddWithValue("@empId", empId);
+            obj.Open();
+            SqlDataReader objDR = objCmd.ExecuteReader();
+            if (objDR.Read())
+            {
+                Console.WriteLine($"number: {objDR["empId"]}");
+                Console.WriteLine($"name: {objDR["name"]}");
+                Console.WriteLine($"Location: {objDR["location"]}");
+            }
+            obj.Close();
+        }
+    }
+}
+============
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
+using System.Text;
+
+namespace ConsoleApp12
+{
+    public class Datasetdemo
+    {
+        private string connectString;
+        private SqlConnection obj;
+        private DataSet dataset;
+        private SqlDataAdapter sqlDataAdapter;
+        //private SqlDataReader read;
+        public Datasetdemo()
+        {
+            connectString = "Data Source=192.168.50.95;Initial Catalog=svedecherla;Integrated Security=True;Persist Security Info=False;Pooling=False;MultipleActiveResultSets=False;Encrypt=False;TrustServerCertificate=False";
+            dataset= new DataSet();
+            obj = new SqlConnection(connectString);
+        }
+        public void Details()
+        {
+            sqlDataAdapter = new SqlDataAdapter("select empId,name,location from InsertEmployee", obj);
+            sqlDataAdapter.Fill(dataset, "Insert");
+            sqlDataAdapter = new SqlDataAdapter("select Lname,Fname,address from Personal", obj);
+            sqlDataAdapter.Fill(dataset, "PersonalInsert");
+           
+            var showdetails = dataset.Tables["Insert"];
+            var show = dataset.Tables["PersonalInsert"];
+            foreach(DataRow row in dataset.Tables[0].Rows)
+            {
+                        Console.WriteLine(row["empId"]+" "+ row["name"] + " " + row["location"] );
+
+            }
+            Console.WriteLine("================");
+            foreach (DataRow row in dataset.Tables[1].Rows)
+            {
+                Console.WriteLine(row["Lname"] + "\t" + row["Fname"] + "\t" + row["address"]);
+
+            }
+
+
+        }
+    }
+}
+// SqlCommand cmd = new SqlCommand("selet empId,name,location from InsertEmployee", obj);
+//obj.Open();
+//SqlDataReader read = new SqlDataReader();
+//if(read.HasRows)
+//{
+//    while(read.Read())
+//    {
+//        Console.WriteLine("{0}\t{1}\t{2}",read.GetString(0),read.GetString(1),read.GetString(2));
+//    }
+//}
+
+//obj.Close();
+
+==============
+using System;
+
+namespace ConsoleApp12
+{
+    public class Program
+    {
+        public static void Main(string[] args)
+        {
+            Console.WriteLine("=========total table========");
+            new ReadEmployee().ReadAll();
+            Console.WriteLine("=========using single parameter id retriving data========");
+            new ReadEmployee().Readbyid(1);
+            Console.WriteLine("=========using name retriving data ========");
+            new ReadEmployee().FilterDeptsByName("meena");
+            Console.WriteLine("=========using id retriving name========");
+            Console.WriteLine(new ReadEmployee().GetDeptNameById(3));
+            Console.WriteLine("========Dataset demo=======");
+            new Datasetdemo().Details();
+            Console.ReadKey();
+            Console.WriteLine("=========Transaction==========");
+            new Transaction().UseofTransaction();
+        }
+    }
+}
+ 
